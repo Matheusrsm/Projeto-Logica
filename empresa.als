@@ -1,7 +1,7 @@
 module empresa
 
 sig Empresa{
-	repositorios: set Repositorio
+	repositorios: one Repositorio
 }
 
 sig Repositorio{
@@ -9,7 +9,7 @@ sig Repositorio{
 }
 
 sig Cliente {
-	projetos: set Projeto
+	projetos: some Projeto
 }
 
 sig Projeto{
@@ -33,6 +33,7 @@ sig Time {
 	dias: set diasTrabalhados
 }
 sig diasTrabalhados {
+	adj: diasTrabalhados -> lone Int
 }
 
 sig Bug {
@@ -40,7 +41,7 @@ sig Bug {
 }
 
 sig Relatorio {
-	descricao: set Descricao,
+	descricao: one Descricao,
 	gravidade: one Gravidade
 }
 
@@ -50,13 +51,13 @@ sig Descricao {
 abstract sig Gravidade {
 }
 
-sig GravidadeUm in Gravidade{
+sig GravidadeUm extends Gravidade{
 }
 
-sig GravidadeDois in Gravidade{
+sig GravidadeDois extends Gravidade{
 }
 
-sig GravidadeTres in Gravidade{
+sig GravidadeTres extends Gravidade{
 }
 
 pred temUmRepositorio[e:Empresa] {
@@ -64,6 +65,13 @@ pred temUmRepositorio[e:Empresa] {
 }
 
 fact {
-	all e:Empresa | temUmRepositorio[e]
+	all r:Repositorio | one r.~repositorios
+	all c:Cliente | one c.~clientes
+	all r:Relatorio | one r.~relatorio
+	all g:Gravidade | one g.~gravidade
+	all d:diasTrabalhados | let x= d.(d.adj) | one x => int[x] > 0
 }
+
+pred show[] {}
+run show
 
