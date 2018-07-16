@@ -69,7 +69,7 @@ fact {
 	all c:Cliente | one c.~clientes
 	all r:Relatorio | one r.~relatorio
 	all g:Gravidade | one g.~gravidade
-	all d:diasTrabalhados | let x= d.(d.adj) | one x => int[x] > 0
+	all d:diasTrabalhados | let x= d.(d.adj) | #x = 1 and some x => int[x] >=0 and int[x] <= 7
 }
 
 pred show[] {}
