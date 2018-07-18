@@ -1,6 +1,6 @@
 module empresa
 
-sig Empresa{
+one sig Empresa {
 	repositorios: one Repositorio
 }
 
@@ -9,31 +9,37 @@ sig Repositorio{
 }
 
 sig Cliente {
-	projetos: some Projeto
+	projetos: set Projeto
 }
 
-sig Projeto{
-	pastas: set Pasta,
+sig Projeto {
+	pastas: one Pasta,
 	time: one Time,
 	bug: set Bug
 }
 
-sig Pasta{
-	subpastas: set SubPasta
+sig Pasta {
+	subpastas: some SubPasta
 }
 
-sig SubPasta extends Pasta {
+sig SubPasta {
 	versoes: set VersaoCodigo
 }
 
 sig VersaoCodigo {
 }
 
-sig Time {
+one sig UltimaVersao extends VersaoCodigo {
+}
+
+one sig Time {
 	dias: set diasTrabalhados
 }
+
 sig diasTrabalhados {
-	adj: diasTrabalhados -> lone Int
+}
+
+one sig Segunda, Terca, Quarta, Quinta, Sexta extends diasTrabalhados {
 }
 
 sig Bug {
@@ -51,13 +57,7 @@ sig Descricao {
 abstract sig Gravidade {
 }
 
-sig GravidadeUm extends Gravidade{
-}
-
-sig GravidadeDois extends Gravidade{
-}
-
-sig GravidadeTres extends Gravidade{
+sig GravidadeUm, GravidadeDois, GravidadeTres extends Gravidade {
 }
 
 pred temUmRepositorio[e:Empresa] {
@@ -69,7 +69,7 @@ fact {
 	all c:Cliente | one c.~clientes
 	all r:Relatorio | one r.~relatorio
 	all g:Gravidade | one g.~gravidade
-	all d:diasTrabalhados | let x= d.(d.adj) | #x = 1 and some x => int[x] >=0 and int[x] <= 7
+	all p:Projeto | one p.~projetos
 }
 
 pred show[] {}
