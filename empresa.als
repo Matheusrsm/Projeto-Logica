@@ -13,33 +13,35 @@ sig Cliente {
 }
 
 sig Projeto {
-	pastas: one Pasta,
+	pasta: one Pasta,
 	time: one Time,
-	bug: set Bug
+	bugs: set Bug
 }
 
 sig Pasta {
-	subpastas: some SubPasta
+	subpastas: set SubPasta
 }
 
 sig SubPasta {
 	versoes: set VersaoCodigo
 }
 
-sig VersaoCodigo {
+abstract sig VersaoCodigo {
 }
 
-one sig UltimaVersao extends VersaoCodigo {
-}
+sig VersaoAntiga extends VersaoCodigo{}
+
+one sig UltimaVersao extends VersaoCodigo {}
 
 one sig Time {
-	dias: set diasTrabalhados
+	dias: set diaDaSemana,
+	projetoAtual: diaDaSemana one -> one Projeto
 }
 
-sig diasTrabalhados {
+sig diaDaSemana {
 }
 
-one sig Segunda, Terca, Quarta, Quinta, Sexta extends diasTrabalhados {
+one sig Segunda, Terca, Quarta, Quinta, Sexta extends diaDaSemana {
 }
 
 sig Bug {
@@ -65,13 +67,24 @@ pred temUmRepositorio[e:Empresa] {
 }
 
 fact {
-	all r:Repositorio | one r.~repositorios
-	all c:Cliente | one c.~clientes
-	all r:Relatorio | one r.~relatorio
-	all g:Gravidade | one g.~gravidade
-	all p:Projeto | one p.~projetos
+	
+	all r:Repositorio | one r.~repositorios	   //Todo repositorio está ligado a somente um empresa
+	all p:Projeto | one p.~projetos		   // Todo projeto está ligado a somente um cliente
+	all c:Cliente | one c.~clientes		   //Todo cliente está ligado a somente um repositorio
+	all p:Pasta | one p.~pasta		   //Toda pasta está ligada a um projeto
+	all s:SubPasta | one s.~subpastas 	   //Toda subpasta está ligada a somente uma pasta
+	all b:Bug | one b.~bugs			   //Todo bug está ligado a somente um projeto
+	all r:Relatorio | one r.~relatorio		   //Todo relatorio está ligado a somente um bug
+	all g:Gravidade | some g.~gravidade	   //Toda gravidade está ligada a um relatorio
+	all d:Descricao | one d.~descricao	   //Toda descrição está ligada a um relatorio
 }
 
+--Falta corrigir:
+	-- Fazer uma pasta poder ter mais de uma subpasta
+	-- Fazer toda subpasta ter uma ultima versão
+	-- Time trabalhar para projetos de um cliente por no maximo dois dias 
+	-- Corrigir os dias trabalhados para o time
+
 pred show[] {}
-run show
+run show for 5
 
