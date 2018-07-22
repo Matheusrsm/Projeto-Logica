@@ -84,6 +84,7 @@ fact {
 	-- Fazer toda subpasta ter uma ultima versão
 	-- Time trabalhar para projetos de um cliente por no maximo dois dias 
 	-- Corrigir os dias trabalhados para o time
+	-- Fazer as gravidades funcionarem como constantes.
 
 pred show[] {}
 run show for 5
