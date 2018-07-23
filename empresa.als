@@ -3,89 +3,114 @@ module empresa
 one sig Empresa {
 	repositorios: one Repositorio
 }
-
-sig Repositorio{
-	clientes: set Cliente
+one sig Repositorio{
+	clientes: some Cliente
 }
-
 sig Cliente {
-	projetos: set Projeto
+	projetos: some Projeto
 }
-
 sig Projeto {
-	pasta: one Pasta,
-	time: one Time,
+	pastas: one Pasta
+}
+sig Pasta{
+	maisAtual: one MaisAtual,
+	versoesAnteriores: some VersaoAnterior
+}
+abstract sig SubPasta{
 	bugs: set Bug
 }
-
-sig Pasta {
-	subpastas: set SubPasta
-}
-
-sig SubPasta {
-	versoes: set VersaoCodigo
-}
-
-abstract sig VersaoCodigo {
-}
-
-sig VersaoAntiga extends VersaoCodigo{}
-
-one sig UltimaVersao extends VersaoCodigo {}
-
-one sig Time {
-	dias: set diaDaSemana,
-	projetoAtual: diaDaSemana one -> one Projeto
-}
-
-sig diaDaSemana {
-}
-
-one sig Segunda, Terca, Quarta, Quinta, Sexta extends diaDaSemana {
-}
+sig MaisAtual extends SubPasta{}
+sig VersaoAnterior extends SubPasta{}
 
 sig Bug {
 	relatorio: one Relatorio
 }
-
 sig Relatorio {
 	descricao: one Descricao,
 	gravidade: one Gravidade
 }
+sig Descricao {}
+abstract sig Gravidade {}
+one sig GravidadeUm, GravidadeDois, GravidadeTres extends Gravidade {}
 
-sig Descricao {
+--predicados
+pred clienteLigadoRepositorio{
+	all c:Cliente | one c.~clientes
+}
+pred projetoLigadoCliente{
+	all p:Projeto | one p.~projetos
+}
+pred pastaLigadaProjeto{
+	all p:Pasta | one p.~pastas
+}
+pred subPastaLigadaUmaPasta{
+	all v:VersaoAnterior | one v.~versoesAnteriores 
+}
+pred todaPastaTemUmaVersaoAtual{
+ 	all m:MaisAtual | one m.~maisAtual
+}
+pred todoBugEstaEmAlgumaPasta{
+	all b:Bug | one b.~bugs	
+}
+pred apenasUmBugPorPasta{
+	all s:SubPasta | #s.bugs <= 1
 }
 
-abstract sig Gravidade {
-}
-
-sig GravidadeUm, GravidadeDois, GravidadeTres extends Gravidade {
-}
-
-pred temUmRepositorio[e:Empresa] {
-	one e.repositorios
-}
-
-fact {
-	
-	all r:Repositorio | one r.~repositorios	   //Todo repositorio está ligado a somente um empresa
-	all p:Projeto | one p.~projetos		   // Todo projeto está ligado a somente um cliente
-	all c:Cliente | one c.~clientes		   //Todo cliente está ligado a somente um repositorio
-	all p:Pasta | one p.~pasta		   //Toda pasta está ligada a um projeto
-	all s:SubPasta | one s.~subpastas 	   //Toda subpasta está ligada a somente uma pasta
-	all b:Bug | one b.~bugs			   //Todo bug está ligado a somente um projeto
+pred relatorioOrganizadoDoBug{
 	all r:Relatorio | one r.~relatorio		   //Todo relatorio está ligado a somente um bug
 	all g:Gravidade | some g.~gravidade	   //Toda gravidade está ligada a um relatorio
 	all d:Descricao | one d.~descricao	   //Toda descrição está ligada a um relatorio
 }
 
---Falta corrigir:
-	-- Fazer uma pasta poder ter mais de uma subpasta
-	-- Fazer toda subpasta ter uma ultima versão
-	-- Time trabalhar para projetos de um cliente por no maximo dois dias 
-	-- Corrigir os dias trabalhados para o time
-	-- Fazer as gravidades funcionarem como constantes.
+--Fatos
+fact {
+	clienteLigadoRepositorio
+	projetoLigadoCliente
+	pastaLigadaProjeto
+	subPastaLigadaUmaPasta
+	todaPastaTemUmaVersaoAtual
+	todoBugEstaEmAlgumaPasta
+	apenasUmBugPorPasta
+	relatorioOrganizadoDoBug
+}
+
+--asserts
+assert temUmRepositorio{
+	all e:Empresa | #e.repositorios = 1
+}
+assert todoClienteTemProjeto{
+	all c:Cliente | #c.projetos > 0
+}
+assert todaPastaTemApenasUmaVersaoMaisAtual{
+	all p:Pasta | #p.maisAtual = 1
+}
+check temUmRepositorio
+check todoClienteTemProjeto
+check todaPastaTemApenasUmaVersaoMaisAtual
+
 
 pred show[] {}
 run show for 5
 
+
+
+/* Código Velho
+sig Projeto {
+	pasta: one Pasta,
+	time: one Time,
+}
+
+one sig Time {
+	dias: set diaDaSemana,
+	projetoAtual: diaDaSemana one -> one Projeto
+}
+sig diaDaSemana {}
+one sig Segunda, Terca, Quarta, Quinta, Sexta extends diaDaSemana {}
+
+
+--Falta corrigir:
+	-- Time trabalhar para projetos de um cliente por no maximo dois dias 
+	-- Corrigir os dias trabalhados para o time
+pred show[] {}
+run show for 5
+*/
