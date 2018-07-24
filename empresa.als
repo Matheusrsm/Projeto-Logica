@@ -6,7 +6,7 @@ one sig Empresa {
 }
 one sig TimeCorretorDeBugs {
 	diaDeTrabalho: one DiaDaSemana,
-	corrigindo: one Bug
+	corrigindo: one MaisAtual
 }
 one abstract sig DiaDaSemana {}
 sig Segunda, Terca, Quarta, Quinta, Sexta extends DiaDaSemana {}
@@ -42,9 +42,21 @@ sig Descricao {}
 abstract sig Gravidade {}
 one sig GravidadeUm, GravidadeDois, GravidadeTres extends Gravidade {}
 
+--Funções
+-- Retorna os projetos de um cliente
+fun getProjetosOfCliente[c: Cliente]: Projeto {
+	c.projetos
+}
+-- Retorna a versão atual de um projeto
+fun getVersaoAtualDoProjeto[p: Projeto]: MaisAtual {
+	p.pastas.maisAtual
+}
+-- Retorna o bug mais atual de um projeto
+fun getBugsDoProjeto[p: Projeto]: Bug {
+	getVersaoAtualDoProjeto[p].bugs
+}
 
-
---predicados
+--Predicados
 pred clienteLigadoRepositorio {
 	all c:Cliente | one c.~clientes
 }
@@ -66,26 +78,14 @@ pred todoBugEstaEmAlgumaPasta {
 pred apenasUmBugPorPasta {
 	all s:SubPasta | #s.bugs <= 1
 }
+pred timeCorrigeApenasVersoesComBug{
+	all t:TimeCorretorDeBugs | #t.corrigindo.bugs =1
+}
 
 pred relatorioOrganizadoDoBug {
 	all r:Relatorio | one r.~relatorio	    //Todo relatorio está ligado a somente um bug
 	all g:Gravidade | some g.~gravidade   //Toda gravidade está ligada a um relatorio
 	all d:Descricao | one d.~descricao	   //Toda descrição está ligada a um relatorio
-}
-
--- Retorna os projetos de um cliente
-fun getProjetosOfCliente[c: Cliente]: Projeto {
-	c.projetos
-}
-
--- Retorna a versão atual de um projeto
-fun getVersaoAtualDoProjeto[p: Projeto]: MaisAtual {
-	p.pastas.maisAtual
-}
-
--- Retorna os bugs de um projeto
-fun getBugsDoProjeto[p: Projeto]: Bug {
-	getVersaoAtualDoProjeto[p].bugs
 }
 
 --fatos
@@ -119,19 +119,11 @@ check todaPastaTemApenasUmaVersaoMaisAtual
 pred show[] {}
 run show for 5
 
-
-
 /* 
 --Requisitos Faltando:
 	-- Time trabalhar para projetos de um cliente por no maximo dois dias 
-	-- Corrigir os dias trabalhados para o time
-	-- 3 Funções
-	-- Time trabalhar apenas no bug cuja pasta é a mais recente
-
-	> A empresa irá atribuir um time de caçadores de bugs para vasculhar no repositório os projetos em andamento que possuem bugs. 
-	> O time irá atuar da seguinte forma: a cada dia irão selecionar um projeto de um cliente diferente para trabalhar; 
-	> Sempre irão atuar na versão mais recente do projeto;
+	-- Dias trabalhados para o time
+	> A cada dia irão selecionar um projeto de um cliente diferente para trabalhar; 
 	> Não podem trabalhar dois dias consecutivos para identificar bugs de um mesmo cliente. 
 	> Todos os bugs devem ser corrigidos pela equipe de desenvolvimento em uma semana. 
-	> Somente após todos os bugs corrigidos é que o projeto volta a estar apto a uma nova revisão pela equipe caçadora de bugs.
 */
