@@ -4,14 +4,14 @@ one sig Empresa {
 	repositorios: one Repositorio,
 	funcionarios: one TimeCorretorDeBugs
 }
-one sig TimeCorretorDeBugs{
+one sig TimeCorretorDeBugs {
 	diaDeTrabalho: one DiaDaSemana,
 	corrigindo: one Bug
 }
 one abstract sig DiaDaSemana {}
 sig Segunda, Terca, Quarta, Quinta, Sexta extends DiaDaSemana {}
 
-one sig Repositorio{
+one sig Repositorio {
 	clientes: some Cliente
 }
 sig Cliente {
@@ -20,16 +20,16 @@ sig Cliente {
 sig Projeto {
 	pastas: one Pasta
 }
-sig Pasta{
+sig Pasta {
 	maisAtual: one MaisAtual,
 	versoesAnteriores: some VersaoAnterior
 }
-abstract sig SubPasta{
+abstract sig SubPasta {
 	bugs: set Bug
 }
-sig MaisAtual extends SubPasta{
+sig MaisAtual extends SubPasta {
 }
-sig VersaoAnterior extends SubPasta{}
+sig VersaoAnterior extends SubPasta {}
 
 sig Bug {
 	relatorio: one Relatorio
@@ -42,36 +42,53 @@ sig Descricao {}
 abstract sig Gravidade {}
 one sig GravidadeUm, GravidadeDois, GravidadeTres extends Gravidade {}
 
+
+
 --predicados
-pred clienteLigadoRepositorio{
+pred clienteLigadoRepositorio {
 	all c:Cliente | one c.~clientes
 }
-pred projetoLigadoCliente{
+pred projetoLigadoCliente {
 	all p:Projeto | one p.~projetos
 }
-pred pastaLigadaProjeto{
+pred pastaLigadaProjeto {
 	all p:Pasta | one p.~pastas
 }
-pred subPastaLigadaUmaPasta{
+pred subPastaLigadaUmaPasta {
 	all v:VersaoAnterior | one v.~versoesAnteriores 
 }
-pred todaPastaTemUmaVersaoAtual{
+pred todaPastaTemUmaVersaoAtual {
  	all m:MaisAtual | one m.~maisAtual
 }
-pred todoBugEstaEmAlgumaPasta{
+pred todoBugEstaEmAlgumaPasta {
 	all b:Bug | one b.~bugs	
 }
-pred apenasUmBugPorPasta{
+pred apenasUmBugPorPasta {
 	all s:SubPasta | #s.bugs <= 1
 }
 
-pred relatorioOrganizadoDoBug{
-	all r:Relatorio | one r.~relatorio		   //Todo relatorio está ligado a somente um bug
-	all g:Gravidade | some g.~gravidade	   //Toda gravidade está ligada a um relatorio
+pred relatorioOrganizadoDoBug {
+	all r:Relatorio | one r.~relatorio	    //Todo relatorio está ligado a somente um bug
+	all g:Gravidade | some g.~gravidade   //Toda gravidade está ligada a um relatorio
 	all d:Descricao | one d.~descricao	   //Toda descrição está ligada a um relatorio
 }
 
---Fatos
+-- Retorna os projetos de um cliente
+fun getProjetosOfCliente[c: Cliente]: Projeto {
+	c.projetos
+}
+
+-- Retorna a versão atual de um projeto
+fun getVersaoAtualDoProjeto[p: Projeto]: MaisAtual {
+	p.pastas.maisAtual
+}
+
+-- Retorna os bugs de um projeto
+fun getBugsDoProjeto[p: Projeto]: Bug {
+	getVersaoAtualDoProjeto[p].bugs
+}
+
+--fatos
 fact {
 	clienteLigadoRepositorio
 	projetoLigadoCliente
@@ -84,15 +101,16 @@ fact {
 }
 
 --asserts
-assert temUmRepositorio{
+assert temUmRepositorio {
 	all e:Empresa | #e.repositorios = 1
 }
-assert todoClienteTemProjeto{
+assert todoClienteTemProjeto {
 	all c:Cliente | #c.projetos > 0
 }
-assert todaPastaTemApenasUmaVersaoMaisAtual{
+assert todaPastaTemApenasUmaVersaoMaisAtual {
 	all p:Pasta | #p.maisAtual = 1
 }
+
 check temUmRepositorio
 check todoClienteTemProjeto
 check todaPastaTemApenasUmaVersaoMaisAtual
@@ -112,7 +130,7 @@ run show for 5
 
 	> A empresa irá atribuir um time de caçadores de bugs para vasculhar no repositório os projetos em andamento que possuem bugs. 
 	> O time irá atuar da seguinte forma: a cada dia irão selecionar um projeto de um cliente diferente para trabalhar; 
-		> Sempre irão atuar na versão mais recente do projeto;
+	> Sempre irão atuar na versão mais recente do projeto;
 	> Não podem trabalhar dois dias consecutivos para identificar bugs de um mesmo cliente. 
 	> Todos os bugs devem ser corrigidos pela equipe de desenvolvimento em uma semana. 
 	> Somente após todos os bugs corrigidos é que o projeto volta a estar apto a uma nova revisão pela equipe caçadora de bugs.
