@@ -1,16 +1,8 @@
 module empresa
 
 one sig Empresa {
-	repositorios: one Repositorio,
-	funcionarios: one TimeCorretorDeBugs
+	repositorios: one Repositorio
 }
-one sig TimeCorretorDeBugs{
-	diaDeTrabalho: one DiaDaSemana,
-	corrigindo: one Bug
-}
-one abstract sig DiaDaSemana {}
-sig Segunda, Terca, Quarta, Quinta, Sexta extends DiaDaSemana {}
-
 one sig Repositorio{
 	clientes: some Cliente
 }
@@ -27,8 +19,7 @@ sig Pasta{
 abstract sig SubPasta{
 	bugs: set Bug
 }
-sig MaisAtual extends SubPasta{
-}
+sig MaisAtual extends SubPasta{}
 sig VersaoAnterior extends SubPasta{}
 
 sig Bug {
@@ -100,20 +91,3 @@ check todaPastaTemApenasUmaVersaoMaisAtual
 
 pred show[] {}
 run show for 5
-
-
-
-/* 
---Requisitos Faltando:
-	-- Time trabalhar para projetos de um cliente por no maximo dois dias 
-	-- Corrigir os dias trabalhados para o time
-	-- 3 Funções
-	-- Time trabalhar apenas no bug cuja pasta é a mais recente
-
-	> A empresa irá atribuir um time de caçadores de bugs para vasculhar no repositório os projetos em andamento que possuem bugs. 
-	> O time irá atuar da seguinte forma: a cada dia irão selecionar um projeto de um cliente diferente para trabalhar; 
-		> Sempre irão atuar na versão mais recente do projeto;
-	> Não podem trabalhar dois dias consecutivos para identificar bugs de um mesmo cliente. 
-	> Todos os bugs devem ser corrigidos pela equipe de desenvolvimento em uma semana. 
-	> Somente após todos os bugs corrigidos é que o projeto volta a estar apto a uma nova revisão pela equipe caçadora de bugs.
-*/
