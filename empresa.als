@@ -1,15 +1,11 @@
 module empresa
 
-one sig Empresa {
-	repositorios: one Repositorio,
-	funcionarios: one TimeCorretorDeBugs
+sig TimeCorretorDeBugs {
+	corrigindo: DiaDaSemana -> VersaoMaisAtual
 }
-one sig TimeCorretorDeBugs {
-	diaDeTrabalho: one DiaDaSemana,
-	corrigindo: one MaisAtual
-}
-one abstract sig DiaDaSemana {}
-sig Segunda, Terca, Quarta, Quinta, Sexta extends DiaDaSemana {}
+
+abstract sig DiaDaSemana {}
+one sig Segunda, Terca, Quarta, Quinta, Sexta extends DiaDaSemana {}
 
 one sig Repositorio {
 	clientes: some Cliente
@@ -21,15 +17,15 @@ sig Projeto {
 	pastas: one Pasta
 }
 sig Pasta {
-	maisAtual: one MaisAtual,
+	maisAtual: one VersaoMaisAtual,
 	versoesAnteriores: some VersaoAnterior
 }
-abstract sig SubPasta {
+abstract sig Versao {
 	bugs: set Bug
 }
-sig MaisAtual extends SubPasta {
+sig VersaoMaisAtual extends Versao {
 }
-sig VersaoAnterior extends SubPasta {}
+sig VersaoAnterior extends Versao {}
 
 sig Bug {
 	relatorio: one Relatorio
@@ -48,7 +44,7 @@ fun getProjetosOfCliente[c: Cliente]: Projeto {
 	c.projetos
 }
 -- Retorna a versão atual de um projeto
-fun getVersaoAtualDoProjeto[p: Projeto]: MaisAtual {
+fun getVersaoAtualDoProjeto[p: Projeto]: VersaoMaisAtual {
 	p.pastas.maisAtual
 }
 -- Retorna o bug mais atual de um projeto
@@ -70,16 +66,19 @@ pred subPastaLigadaUmaPasta {
 	all v:VersaoAnterior | one v.~versoesAnteriores 
 }
 pred todaPastaTemUmaVersaoAtual {
- 	all m:MaisAtual | one m.~maisAtual
+ 	all m:VersaoMaisAtual | one m.~maisAtual
 }
 pred todoBugEstaEmAlgumaPasta {
 	all b:Bug | one b.~bugs	
 }
 pred apenasUmBugPorPasta {
-	all s:SubPasta | #s.bugs <= 1
+	all s:Versao | #s.bugs <= 1
 }
 pred timeCorrigeApenasVersoesComBug{
 	all t:TimeCorretorDeBugs | #t.corrigindo.bugs =1
+}
+pred temTimes {
+	all t:TimeCorretorDeBugs | #t.corrigindo > 0
 }
 
 pred relatorioOrganizadoDoBug {
@@ -98,11 +97,12 @@ fact {
 	todoBugEstaEmAlgumaPasta
 	apenasUmBugPorPasta
 	relatorioOrganizadoDoBug
+	temTimes
 }
 
 --asserts
-assert temUmRepositorio {
-	all e:Empresa | #e.repositorios = 1
+assert todoRepositorioTemCliente {
+	all r:Repositorio | #r.clientes > 0
 }
 assert todoClienteTemProjeto {
 	all c:Cliente | #c.projetos > 0
@@ -111,7 +111,7 @@ assert todaPastaTemApenasUmaVersaoMaisAtual {
 	all p:Pasta | #p.maisAtual = 1
 }
 
-check temUmRepositorio
+check todoRepositorioTemCliente
 check todoClienteTemProjeto
 check todaPastaTemApenasUmaVersaoMaisAtual
 
@@ -121,9 +121,9 @@ run show for 5
 
 /* 
 --Requisitos Faltando:
-	-- Time trabalhar para projetos de um cliente por no maximo dois dias 
-	-- Dias trabalhados para o time
+	-- Time trabalhar para projetos de um cliente por no maximo dois dias por semana 
 	> A cada dia irão selecionar um projeto de um cliente diferente para trabalhar; 
 	> Não podem trabalhar dois dias consecutivos para identificar bugs de um mesmo cliente. 
-	> Todos os bugs devem ser corrigidos pela equipe de desenvolvimento em uma semana. 
+	> time trabalhar apenas em versões com bugs
+	> times trabalhando em um projetos por dia
 */
