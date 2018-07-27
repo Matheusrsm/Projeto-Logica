@@ -30,7 +30,7 @@ sig Relatorio {
 }
 
 some sig TimeCorretorDeBugs {
-	corrigindo: DiaDaSemana -> VersaoMaisAtual
+	corrigindo: DiaDaSemana one -> VersaoMaisAtual
 }
 
 abstract sig DiaDaSemana {}
@@ -76,10 +76,10 @@ pred todoBugEstaEmAlgumaPasta {
 pred apenasUmBugPorPasta {
 	all s:Versao | #s.bugs <= 1
 }
-pred timeCorrigeApenasVersoesComBug{
-	all t:TimeCorretorDeBugs | #t.corrigindo.bugs = 1
+pred timeCorrigeApenasVersoesComBug {
+	all t:TimeCorretorDeBugs | #t.corrigindo.bugs >= 1
 }
-pred todoTimeEstaCorrigindo{
+pred todoTimeEstaCorrigindo {
 	all t:TimeCorretorDeBugs | #t.corrigindo = 5 
 }
 pred relatorioOrganizadoDoBug {
@@ -100,8 +100,6 @@ fact {
 	relatorioOrganizadoDoBug
 	todoTimeEstaCorrigindo
 	timeCorrigeApenasVersoesComBug
-	#TimeCorretorDeBugs = 2
-	#Cliente = 4
 }
 
 --asserts
@@ -122,6 +120,3 @@ check todaPastaTemApenasUmaVersaoMaisAtual for 10
 
 pred show[] {}
 run show for 25
-
-/*> a cada dia irão selecionar um projeto de um cliente diferente para trabalhar; 
-   > não podem trabalhar dois dias consecutivos para identificar bugs de um mesmo cliente. */
