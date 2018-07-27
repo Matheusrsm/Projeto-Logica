@@ -1,15 +1,9 @@
 module empresa
 
-sig TimeCorretorDeBugs {
-	corrigindo: DiaDaSemana -> VersaoMaisAtual
-}
-
-abstract sig DiaDaSemana {}
-one sig Segunda, Terca, Quarta, Quinta, Sexta extends DiaDaSemana {}
-
 one sig Repositorio {
 	clientes: some Cliente
 }
+
 sig Cliente {
 	projetos: some Projeto
 }
@@ -34,6 +28,14 @@ sig Relatorio {
 	descricao: one Descricao,
 	gravidade: one Gravidade
 }
+
+some sig TimeCorretorDeBugs {
+	corrigindo: DiaDaSemana -> VersaoMaisAtual
+}
+
+abstract sig DiaDaSemana {}
+one sig Segunda, Terca, Quarta, Quinta, Sexta extends DiaDaSemana {}
+
 sig Descricao {}
 abstract sig Gravidade {}
 one sig GravidadeUm, GravidadeDois, GravidadeTres extends Gravidade {}
@@ -62,7 +64,7 @@ pred projetoLigadoCliente {
 pred pastaLigadaProjeto {
 	all p:Pasta | one p.~pastas
 }
-pred subPastaLigadaUmaPasta {
+pred versaoLigadaUmaPasta {
 	all v:VersaoAnterior | one v.~versoesAnteriores 
 }
 pred todaPastaTemUmaVersaoAtual {
@@ -75,12 +77,11 @@ pred apenasUmBugPorPasta {
 	all s:Versao | #s.bugs <= 1
 }
 pred timeCorrigeApenasVersoesComBug{
-	all t:TimeCorretorDeBugs | #t.corrigindo.bugs =1
+	all t:TimeCorretorDeBugs | #t.corrigindo.bugs = 1
 }
-pred temTimes {
-	all t:TimeCorretorDeBugs | #t.corrigindo > 0
+pred todoTimeEstaCorrigindo{
+	all t:TimeCorretorDeBugs | #t.corrigindo = 5 
 }
-
 pred relatorioOrganizadoDoBug {
 	all r:Relatorio | one r.~relatorio	    //Todo relatorio está ligado a somente um bug
 	all g:Gravidade | some g.~gravidade   //Toda gravidade está ligada a um relatorio
@@ -92,12 +93,15 @@ fact {
 	clienteLigadoRepositorio
 	projetoLigadoCliente
 	pastaLigadaProjeto
-	subPastaLigadaUmaPasta
+	versaoLigadaUmaPasta
 	todaPastaTemUmaVersaoAtual
 	todoBugEstaEmAlgumaPasta
 	apenasUmBugPorPasta
 	relatorioOrganizadoDoBug
-	temTimes
+	todoTimeEstaCorrigindo
+	timeCorrigeApenasVersoesComBug
+	#TimeCorretorDeBugs = 2
+	#Cliente = 4
 }
 
 --asserts
@@ -111,19 +115,13 @@ assert todaPastaTemApenasUmaVersaoMaisAtual {
 	all p:Pasta | #p.maisAtual = 1
 }
 
-check todoRepositorioTemCliente
-check todoClienteTemProjeto
-check todaPastaTemApenasUmaVersaoMaisAtual
+check todoRepositorioTemCliente for 10
+check todoClienteTemProjeto for 10
+check todaPastaTemApenasUmaVersaoMaisAtual for 10
 
 
 pred show[] {}
-run show for 5
+run show for 25
 
-/* 
---Requisitos Faltando:
-	-- Time trabalhar para projetos de um cliente por no maximo dois dias por semana 
-	> A cada dia irão selecionar um projeto de um cliente diferente para trabalhar; 
-	> Não podem trabalhar dois dias consecutivos para identificar bugs de um mesmo cliente. 
-	> time trabalhar apenas em versões com bugs
-	> times trabalhando em um projetos por dia
-*/
+/*> a cada dia irão selecionar um projeto de um cliente diferente para trabalhar; 
+   > não podem trabalhar dois dias consecutivos para identificar bugs de um mesmo cliente. */
